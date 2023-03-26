@@ -1,4 +1,5 @@
 import requests
+import os
 
 class xcpy:
     def __init__(self, api_key):
@@ -75,3 +76,34 @@ class xcpy:
             return response.json()
         else:
             response.raise_for_status()
+
+    def download_audio(self, recordings, download_dir):
+    """
+    Download audio files from a list of Recording objects to the specified directory.
+
+    Parameters:
+    recordings (list): A list of Recording objects returned by the XenoCantoAPI.search_recordings method.
+    download_dir (str): The directory where audio files should be downloaded to.
+
+    Returns:
+    None
+    """
+
+    if not os.path.exists(download_dir):
+        os.makedirs(download_dir)
+
+    for recording in recordings:
+        audio_url = recording.file
+        audio_filename = os.path.basename(audio_url)
+
+        response = requests.get(audio_url)
+
+        if response.status_code == 200:
+            audio_file_path = os.path.join(download_dir, audio_filename)
+
+            with open(audio_file_path, 'wb') as f:
+                f.write(response.content)
+
+            print(f'Downloaded {audio_file_path}')
+        else:
+            print(f'Error downloading audio file for Recording {recording.id}')
